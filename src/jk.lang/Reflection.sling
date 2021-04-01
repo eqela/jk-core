@@ -1,0 +1,116 @@
+
+/*
+ * This file is part of Jkop
+ * Copyright (c) 2016-2021 J42 Pte Ltd
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+class:
+
+func createClassInstanceByName(qualifiedName as string) static as dynamic
+{
+	assert String.isNotEmpty(qualifiedName)
+	IFDEF "target_sushi" {
+		var code = " return _g." .. qualifiedName .. "._construct0(_g." .. qualifiedName .. "._create())"
+		var ff = assert lang "lua" function<dynamic> {{{ _vm:parse_to_function(code) }}}
+		return ff()
+	}
+	ELSE {
+		ERROR "Not implemented."
+		return null
+	}
+}
+
+func createClassInstanceByTypeinfo(type as typeinfo) static as dynamic
+{
+	IFDEF "target_sushi" {
+		var typename = lang "lua" string {{{ type }}}
+		assert String.startsWith(typename, "class:")
+		typename = String.getEndOfString(typename, 6)
+		return createClassInstanceByName(typename)
+	}
+	ELSE {
+		ERROR "Not implemented."
+		return null
+	}
+}
+
+func callMethod(objectInstance as object, methodName as string, arguments as array<dynamic>) static as dynamic
+{
+	IFDEF "target_sushi" {
+		var sb = new StringBuilder()
+		sb.appendString("return function(object, arguments) return object:")
+		sb.appendString(methodName)
+		sb.appendString("(")
+		var sz = sizeof arguments
+		for(var n=0; n<sz; n++) {
+			if n > 0:
+				sb.appendString(",")
+			sb.appendString("arguments[")
+			sb.appendInteger(n+1)
+			sb.appendString("]")
+		}
+		sb.appendString(") end")
+		var code = sb.toString()
+		var ff = assert lang "lua" function<function<dynamic,object,array<dynamic>>> {{{ _vm:parse_to_function(code) }}}
+		var ffx = assert ff()
+		return ffx(objectInstance, arguments)
+	}
+	ELSE {
+		ERROR "Not implemented."
+		return null
+	}
+}
+
+func getDataTypeInfo(variable as dynamic) static as typeinfo:
+	return typeof variable
+
+func isSameType(primary as object, other as object) static as bool
+{
+	if primary == null && other == null:
+		return true
+	if primary == null || other == null:
+		return false
+	var ta = typeof primary
+	var tb = typeof other
+	if ta == tb:
+		return true
+	return false
+}
+
+func isInstanceOf(objectInstance as object, type as typeinfo) static as bool
+{
+	assert objectInstance
+	IFDEF "target_cs" {
+		lang "cs" {{{
+			if(type == null) {
+				return false;
+			}
+		}}}
+		return lang "cs" bool {{{ type.IsAssignableFrom(objectInstance.GetType()) }}}
+	}
+	ELSE IFDEF "target_sushi" {
+		return lang "lua" bool {{{ _vm:is_instance_of(objectInstance, type) }}}
+	}
+	ELSE {
+		ERROR "Not implemented"
+		return false
+	}
+}
