@@ -37,7 +37,7 @@ class MyArrayObject <T> is ArrayObject<T> is ObjectWithSize private
 		return array
 
 	func getSize as int:
-		return sizeof array
+		return (sizeof array) as int
 }
 
 **

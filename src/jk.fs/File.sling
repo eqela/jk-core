@@ -1021,7 +1021,7 @@ func setContentsBuffer(buffer as buffer) virtual as bool
 	onError(null)
 	assert buffer
 	var writer = assert write()
-	if writer.write(buffer, sizeof buffer) < 0:
+	if writer.write(buffer, (sizeof buffer) as int) < 0:
 		return false
 	writer.close()
 	return true
