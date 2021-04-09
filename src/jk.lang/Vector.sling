@@ -391,10 +391,12 @@ func remove <T> (vector as vector<T>, index as int) static as T
 		}}}
 	}
 	ELSE IFDEF "target_sushi" {
+		var v = lang "lua" T {{{ vector[index + 1] }}}
 		lang "lua" {{{
 			_vm:remove_from_indexed_table(vector, index+1)
 			vector["n"] = sz - 1
 		}}}
+		return v
 	}
 	ELSE IFDEF "target_swift" {
 		var v = get(vector, index)
