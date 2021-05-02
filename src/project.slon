@@ -23,7 +23,7 @@
 #
 
 {
-	vendorId "eqela"
+	namespace "eqela"
 	projectId "jk-core"
 	title "JK Core"
 	description [[
