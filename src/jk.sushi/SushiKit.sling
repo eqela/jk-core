@@ -65,21 +65,33 @@ func executeFile(file as dynamic, args as dynamic) as int
 	return code.execute(asStringVector(args))
 }
 
-func executeFileProcess(file as dynamic, args as dynamic) as int
+func createProcessLauncher as ProcessLauncher
 {
-	var ff = new FileKit(ctx).asFile(file)
 	var pl as ProcessLauncher
 	IFDEF "target_sushi" {
 		pl = ProcessLauncher.forSelf()
 	}
 	if not pl:
-		pl = ProcessLauncher.forCommand("eqela")
-	if not pl:
 		pl = ProcessLauncher.forCommand("sushi")
 	if not pl:
 		Error.throw("failedToFindSushiVm", null)
+	return pl
+}
+
+func executeFileProcess(file as dynamic, args as dynamic) as int
+{
+	var ff = new FileKit(ctx).asFile(file)
+	var pl = createProcessLauncher()
 	pl.addToParams(ff.getPath())
 	foreach arg in asStringVector(args):
+		pl.addToParams(arg)
+	return pl.execute()
+}
+
+func executeProcess(args as array) as int
+{
+	var pl = createProcessLauncher()
+	foreach arg as string in args:
 		pl.addToParams(arg)
 	return pl.execute()
 }
