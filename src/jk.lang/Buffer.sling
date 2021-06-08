@@ -22,39 +22,39 @@
  * SOFTWARE.
  */
 
-**
-** The Buffer class provides convenience methods for dealing with data buffers
-** (arbitrary sequences of bytes).
-**
+class is BufferObject:
 
-class:
+meta
+{
+	description [[
+		The Buffer class provides convenience methods for dealing with data buffers
+		(arbitrary sequences of bytes).
+	]]
+}
 
 IFDEF "target_swift"
 {
 	depend "swift-import:CoreFoundation"
 }
 
-class MyBufferObject is BufferObject private
-{
-	pvar buffer as buffer
-
-	func toBuffer as buffer:
-		return buffer
-}
-
-**
-** Returns the given array as a BufferObject (which is an object type)
-** that can be used wherever an object or a class instance is required.
-**
+func forValue(value as buffer) static as this:
+	return new this(value)
 
 func asObject(buffer as buffer) static as BufferObject
 {
-	var v = new MyBufferObject()
-	v.setBuffer(buffer)
-	return v
+	meta {
+		description [[
+			Returns the given array as a BufferObject (which is an object type)
+			that can be used wherever an object or a class instance is required.
+		]]
+	}
+	return new this(buffer)
 }
 
-func asBuffer(obj as dynamic) static as buffer
+func asBuffer(obj as dynamic) static as buffer #deprecated:
+	return asValue(obj)
+
+func asValue(obj as dynamic) static as buffer
 {
 	assert obj
 	if obj is buffer:
@@ -859,3 +859,16 @@ func forHexString(str as string) static as buffer
 	}
 	return b
 }
+
+property value as buffer
+{
+}
+
+ctor:
+	nop
+
+ctor(value as buffer):
+	this.value = value
+
+func toBuffer as buffer:
+	return value
