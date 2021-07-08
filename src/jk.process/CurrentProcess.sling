@@ -135,7 +135,7 @@ func getExecutableFile static as File
 	IFDEF "target_objc" {
 		lang "objc" {{{
 			NSString* executablePath = [[NSBundle mainBundle] executablePath];
-    		return [JkFsFile forPath: executablePath];
+			return [JkFsFile forPath: executablePath];
 		}}}
 	}
 	ELSE IFDEF "target_swift" {
