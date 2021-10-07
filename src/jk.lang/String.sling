@@ -765,7 +765,7 @@ func forDouble(vv as double #used) static as string
 		return lang "kotlin" string {{{ java.math.BigDecimal(vv.toString()).toPlainString() }}}
 	}
 	ELSE IFDEF "target_sushi" {
-		return lang "lua" string {{{ _util:create_string_for_float(vv) }}}
+		return lang "lua" string {{{ _util:create_string_for_double(vv) }}}
 	}
 	ELSE IFDEF "target_stdlua" {
 		return lang "lua" string {{{ tostring(vv) }}}
