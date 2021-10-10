@@ -765,13 +765,51 @@ func forDouble(vv as double #used) static as string
 		return lang "kotlin" string {{{ java.math.BigDecimal(vv.toString()).toPlainString() }}}
 	}
 	ELSE IFDEF "target_sushi" {
-		return lang "lua" string {{{ _util:create_string_for_double(vv) }}}
+		return lang "lua" string {{{ _util:create_string_for_float(vv) }}}
 	}
 	ELSE IFDEF "target_stdlua" {
 		return lang "lua" string {{{ tostring(vv) }}}
 	}
 	ELSE IFDEF "target_swift" {
 		return lang "swift" string {{{ NSDecimalNumber(string: vv.description) }}}
+	}
+	ELSE {
+		ERROR "Not implemented"
+		return null
+	}
+}
+
+func forDoubleWithDecimals(vv as double, decimals as int) static as string
+{
+	IFDEF "target_objc" {
+		var format = "%." .. decimals .. "f"
+		return lang "objc" string {{{ [NSString stringWithFormat:format, vv] }}}
+	}
+	ELSE IFDEF "target_java" {
+		var format = "%." .. decimals .. "f"
+		return lang "java" string {{{ String.format(format, vv) }}}
+	}
+	ELSE IFDEF "target_cs" {
+		var fomat = StringBuilder.forString("{0:0.")
+		for(var i = 0; i < decimals; i++) {
+			format.appendString("0")
+		}
+		format.appendString("}")
+		return lang "cs" string {{{ String.Format(format, vv) }}}
+	}
+	ELSE IFDEF "target_js" {
+		return lang "js" string {{{ vv.toFixed(decimals) }}}
+	}
+	ELSE IFDEF "target_kotlin" {
+		var format = "%." .. decimals .. "f"
+		return lang "kotlin" string {{{ String.format(format, vv) }}}
+	}
+	ELSE IFDEF "target_sushi" {
+		return lang "lua" string {{{ _util:create_string_for_double_with_decimals(vv, decimals) }}}
+	}
+	ELSE IFDEF "target_swift" {
+		var format = "%." .. decimals .. "f"
+		return lang "swift" string {{{ String(format: format, vv) }}}
 	}
 	ELSE {
 		ERROR "Not implemented"
