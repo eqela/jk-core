@@ -101,7 +101,7 @@ func forPath(path as string) static as this
 	ELSE IFDEF "target_swift" {
 		return FileForSwift.forPath(path)
 	}
-	ELSE IFDEF "target_js" {
+	ELSE IFDEF "target_browser" {
 		return FileForBrowser.forPath(path)
 	}
 	ELSE {
