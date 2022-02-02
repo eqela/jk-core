@@ -116,9 +116,6 @@ func get(key as string) static as string
 		}}}
 		return v
 	}
-	ELSE IFDEF "target_node" {
-		return lang "js" string {{{ process.env[key] }}}
-	}
 	ELSE {
 		var vars = assert getAll()
 		return Map.get(vars, key)
