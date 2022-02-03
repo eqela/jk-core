@@ -77,6 +77,41 @@ class MyFileReader is FileReader is SizedReader is Reader is Closable is Seekabl
 	}
 }
 
+class MyFileWriter is FileWriter
+{
+	pvar path as string
+	pvar isAppend as bool
+	var fd as int
+
+	func write(buf as buffer, size as int) as int
+	{
+		assert buf
+		var v = -1
+		lang "js" {{{
+			if(this.isAppend === true) {
+				require("fs").appendFileSync(this.path, Buffer.from(buf));
+			}
+			else {
+				let fs = require("fs");
+				this.fd = fs.openSync(this.path, 'w');
+				v = fs.writeSync(this.fd, Buffer.from(buf), 0, size, 0)
+			}
+		}}}
+		return v
+	}
+
+	func close
+	{
+		if fd >= 0 {
+			lang "js" {{{
+				require("fs").closeSync(this.fd);
+			}}}
+			fd = -1
+		}
+	}
+
+}
+
 var path as string
 
 func forPath(path as string) static as File
@@ -95,8 +130,35 @@ func entry(name as string) override as File
 	return forPath(pp)
 }
 
-func move(dest as File, replace as bool) override stub as bool
-func touch override stub as bool
+func move(dest as File, replace as bool) override as bool
+{
+	assert path
+	var rr = true
+	lang "js" {{{
+		try {
+			require("fs").renameSync(this.path, dest.path);
+		} catch (err) {
+			console.error(err);
+			rr = false;
+		}
+	}}}
+	return rr
+}
+
+func touch override as bool
+{
+	assert path
+	var rr = true
+	lang "js" {{{
+		try {
+			require("fs").openSync(this.path, 'w');
+		} catch (err) {
+			console.error(err);
+			rr = false;
+		}
+	}}}
+	return rr
+}
 
 func read override as FileReader
 {
@@ -116,8 +178,21 @@ func read override as FileReader
 	return v
 }
 
-func write override stub as FileWriter
-func append override stub as FileWriter
+func write override as FileWriter
+{
+	var v = new MyFileWriter()
+	v.setPath(path)
+	return v
+}
+
+func append override as FileWriter
+{
+	assert path
+	var v = new MyFileWriter()
+	v.setPath(path)
+	v.setIsAppend(true)
+	return v
+}
 
 func stat override as FileInfo
 {
@@ -148,10 +223,66 @@ func stat override as FileInfo
 	return v
 }
 
-func isExecutable override stub as bool
-func createDirectory override stub as bool
-func createDirectoryRecursive override stub as bool
-func removeDirectory override stub as bool
+func isExecutable override as bool
+{
+	assert path
+	var rr as bool
+	lang "js" {{{
+		let fs = require("fs");
+		try {
+			fs.accessSync(this.path, fs.constants.X_OK);
+			rr = true;
+		} catch (err) {
+			rr = false;
+		}
+	}}}
+	return rr
+}
+
+func createDirectory override as bool
+{
+	assert path
+	var rr = true
+	lang "js" {{{
+		try {
+			require("fs").mkdirSync(this.path);
+		} catch (err) {
+			console.error(err);
+			rr = false;
+		}
+	}}}
+	return rr
+}
+
+func createDirectoryRecursive override as bool
+{
+	assert path
+	var rr = true
+	lang "js" {{{
+		try {
+			require("fs").mkdirSync(this.path, {recursive: true});
+		} catch (err) {
+			console.error(err);
+			rr = false;
+		}
+	}}}
+	return rr
+}
+
+func removeDirectory override as bool
+{
+	assert path
+	var rr = true
+	lang "js" {{{
+		try {
+			require("fs").rmdirSync(this.path);
+		} catch (err) {
+			console.error(err);
+			rr = false;
+		}
+	}}}
+	return rr
+}
 
 func setPath(newPath as string)
 {
@@ -163,6 +294,61 @@ func setPath(newPath as string)
 func getPath override as string:
 	return path
 
-func remove override stub as bool
-func makeExecutable override stub as bool
-func entries override stub as Iterator<File>
+func remove override as bool
+{
+	assert path
+	var rr = true
+	lang "js" {{{
+		try {
+			require("fs").rmSync(this.path);
+		} catch (err) {
+			console.error(err);
+			rr = false;
+		}
+	}}}
+	return rr
+}
+
+func makeExecutable override as bool
+{
+	assert path
+	var rr = true
+	lang "js" {{{
+		try {
+			let fs = require("fs");
+			fs.openSync(this.path, fs.constants.S_IXUSR);
+		} catch (err) {
+			console.error(err);
+			rr = false;
+		}
+	}}}
+	return rr
+}
+
+func entries override as Iterator<File>
+{
+	assert path
+	var files = new vector<string>
+	var v = new vector<File>
+	lang "js" {{{
+		try {
+			const dir = require("fs").opendirSync(this.path);
+			let dirent;
+			while ((dirent = dir.readSync()) !== null) {
+				console.log(dirent.name);
+				files.push(dirent.name);
+			}
+			dir.closeSync();
+		} catch (err) {
+			console.error(err);
+		}
+	}}}
+	if not files:
+		return null
+	foreach path in files {
+		var ff = this.forPath(this.path .. "/" .. path)
+		Vector.append(v, ff)
+	}
+	var entries as Iterator<File> #force = Vector.iterate(v)
+	return entries
+}
