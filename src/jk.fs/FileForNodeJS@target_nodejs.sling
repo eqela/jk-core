@@ -335,7 +335,6 @@ func entries override as Iterator<File>
 			const dir = require("fs").opendirSync(this.path);
 			let dirent;
 			while ((dirent = dir.readSync()) !== null) {
-				console.log(dirent.name);
 				files.push(dirent.name);
 			}
 			dir.closeSync();
